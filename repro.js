@@ -14,7 +14,7 @@
  * Expected (bug present): victims sharing enough bytes with H are truncated —
  * their tails overwritten by the renamed html's new content-hash.
  */
-const { execSync, spawnSync } = require('child_process')
+const { spawnSync } = require('child_process')
 const crypto = require('crypto')
 const fs = require('fs')
 const path = require('path')

@@ -56,4 +56,4 @@ number of hermesc runs, bytecode never mutated. Prototype diff against
 `.hbc` has valid Hermes magic, and the html keeps its content-hashed name.
 
 Affected: reproduced on `@expo/cli` 54.0.24 (SDK 54, RN 0.81 hermesc) and
-57.0.19–57.0.21 (SDK 57, hermes-v0.17).
+57.0.20 and 57.0.21 (SDK 57, hermes-v0.17).
