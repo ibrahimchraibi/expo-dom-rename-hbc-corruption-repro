@@ -45,15 +45,23 @@ neighbour's bytes.
 same-length `Buffer.copy` into the compiled artifact. The text branch (non-
 bytecode exports) is sound; `--no-bytecode` exports are unaffected.
 
-## Proposed fix (prototype validated in this repo)
+## Proposed fix (implemented in [expo/expo#49627](https://github.com/expo/expo/pull/49627))
 
-Defer Hermes compilation until after the DOM renames: request the native bundle
-with `bytecode: false`, let `transformNativeBundleForMd5Filename` take its
-(sound) text branch, then compile once via `buildHermesBundleAsync`. Same
-number of hermesc runs, bytecode never mutated. Prototype diff against
-`@expo/cli@57.0.21`'s built output: [`docs/proposed-fix-prototype.patch`](docs/proposed-fix-prototype.patch)
-— with it applied to `node_modules`, `node repro.js` prints `PASS`, the emitted
-`.hbc` has valid Hermes magic, and the html keeps its content-hashed name.
+Defer Hermes compilation until after the DOM html renames — **inside the
+serializer, not by flipping the request's `bytecode` flag**: `bytecode` is also
+a transform option (it gates `shouldMinify`; hermes+bytecode skips JS
+minification in favour of `hermesc -O`), so requesting `bytecode: false` would
+change per-module transformation and double-minify. Instead, the chunk
+serializer marks chunks that contain DOM component references with
+`metadata.deferredHermesBytecode` and skips the inline compile; `expo export`
+and `export:embed` compile deferred artifacts after the renames have run on the
+serialized JS (the already-sound text branch of the same function).
+
+A prototype of this design against the published build output is in
+[`docs/proposed-fix-prototype.patch`](docs/proposed-fix-prototype.patch) — with
+it applied to `node_modules`, `node repro.js` prints `PASS` and the emitted
+bytecode is byte-size-equivalent to stock (1,458,932 vs 1,458,920 — the delta
+is the renamed filename itself), confirming transform parity.
 
 Affected: reproduced on `@expo/cli` 54.0.24 (SDK 54, RN 0.81 hermesc) and
 57.0.20 and 57.0.21 (SDK 57, hermes-v0.17).
