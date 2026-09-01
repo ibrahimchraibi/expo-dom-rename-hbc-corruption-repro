@@ -1,0 +1,72 @@
+diff --git aa/build/src/export/exportApp.js bb/build/src/export/exportApp.js
+index 01163ded2d..9efacec0b3 100644
+--- aa/build/src/export/exportApp.js
++++ bb/build/src/export/exportApp.js
+@@ -219,7 +219,7 @@ async function exportAppAsync(projectRoot, { platforms, outputDir, clear, dev, d
+                         engine: isHermes ? 'hermes' : undefined,
+                         serializerIncludeMaps: sourceMaps || inlineSourceMaps,
+                         inlineSourceMap: inlineSourceMaps,
+-                        bytecode: bytecode && isHermes,
++                        bytecode: false, /* UPSTREAM-FIX: defer hermes until after DOM html renames */
+                         reactCompiler: !!((_exp_experiments = exp.experiments) == null ? void 0 : _exp_experiments.reactCompiler),
+                         hosted: hostedNative
+                     }, files);
+@@ -273,6 +273,41 @@ async function exportAppAsync(projectRoot, { platforms, outputDir, clear, dev, d
+                         })
+                     ];
+                 }));
++                /* UPSTREAM-FIX: compile Hermes bytecode now that the DOM
++                   component html renames have been applied to the serialized
++                   JS text. Upstream compiled first and binary-patched the
++                   bytecode, which corrupts strings hermesc overlap-packed
++                   with the placeholder name. */
++                if (bytecode && isHermes && platform !== 'web') {
++                    const { buildHermesBundleAsync } = require('@expo/metro-config/build/serializer/exportHermes');
++                    for (const artifact of bundle.artifacts){
++                        if (artifact.type !== 'js') continue;
++                        const entry = files.get(artifact.filename);
++                        if (!entry) continue;
++                        const code = typeof entry.contents === 'string' ? entry.contents : entry.contents.toString('utf8');
++                        const mapArtifact = bundle.artifacts.find((a)=>a.type === 'map' && a.filename === `${artifact.filename}.map`);
++                        const mapEntry = mapArtifact ? files.get(mapArtifact.filename) : null;
++                        const { hbc, sourcemap } = await buildHermesBundleAsync({
++                            projectRoot,
++                            code,
++                            map: mapEntry ? String(mapEntry.contents) : undefined,
++                            minify: !dev,
++                            filename: artifact.filename
++                        });
++                        const newName = artifact.filename.replace(/\.js$/, '.hbc');
++                        files.delete(artifact.filename);
++                        files.set(newName, { ...entry, contents: hbc });
++                        if (mapArtifact && sourcemap) {
++                            const newMapName = `${newName}.map`;
++                            files.delete(mapArtifact.filename);
++                            files.set(newMapName, { ...mapEntry, contents: sourcemap });
++                            mapArtifact.filename = newMapName;
++                            mapArtifact.contents = sourcemap;
++                        }
++                        artifact.filename = newName;
++                        artifact.contents = hbc;
++                    }
++                }
+                 if (platform === 'web') {
+                     const faviconAsset = await (0, _favicon.generateFaviconAssetAsync)(projectRoot, {
+                         outputDir,
+diff --git aa/build/src/export/exportDomComponents.js bb/build/src/export/exportDomComponents.js
+index cee1be1709..55e73e487f 100644
+--- aa/build/src/export/exportDomComponents.js
++++ bb/build/src/export/exportDomComponents.js
+@@ -172,6 +172,12 @@ function transformNativeBundleForMd5Filename({ domComponentReference, nativeBund
+         const assetEntity = files.get(artifact.filename);
+         (0, _assert().default)(assetEntity);
+         if (Buffer.isBuffer(assetEntity.contents)) {
++            /* UPSTREAM-FIX: with bytecode deferred this branch must never run —
++               binary-patching compiled Hermes bytecode corrupts overlap-packed
++               neighbour strings. */
++            throw new Error('transformNativeBundleForMd5Filename received compiled bytecode; renames must happen on serialized JS');
++        }
++        if (false) {
+             const searchBuffer = Buffer.from(`${hash}.html`, 'utf8');
+             const replaceBuffer = Buffer.from(`${htmlMd5}.html`, 'utf8');
+             (0, _assert().default)(searchBuffer.length === replaceBuffer.length);

@@ -1,0 +1,33 @@
+npm warn exec The following package was not found and will be installed: expo-env-info@2.1.0
+
+  expo-env-info 2.1.0 environment info:
+    System:
+      OS: macOS 26.6.2
+      Shell: 5.9 - /bin/zsh
+    Binaries:
+      Node: 22.21.0 - /Users/ibrahim/.nvm/versions/node/v22.21.0/bin/node
+      Yarn: 1.22.17 - /usr/local/bin/yarn
+      npm: 10.9.4 - /Users/ibrahim/.nvm/versions/node/v22.21.0/bin/npm
+      Watchman: 2025.05.26.00 - /opt/homebrew/bin/watchman
+    Managers:
+      CocoaPods: 1.16.2 - /opt/homebrew/bin/pod
+    SDKs:
+      iOS SDK:
+        Platforms: DriverKit 25.5, iOS 26.5, macOS 26.5, tvOS 26.5, visionOS 26.5, watchOS 26.5
+      Android SDK:
+        API Levels: 23, 29, 30, 31, 32, 33, 34, 35, 36
+        Build Tools: 28.0.3, 29.0.2, 30.0.2, 30.0.3, 32.0.0, 33.0.0, 33.0.0, 33.0.1, 34.0.0, 35.0.0, 36.0.0
+        System Images: android-34 | Google Play ARM 64 v8a, android-36 | Google Play ARM 64 v8a, android-37.0 | Pre-Release 16 KB Page Size Google Play ARM 64 v8a
+    IDEs:
+      Android Studio: 2025.1 AI-251.27812.49.2514.14217341
+      Xcode: 26.6/17F113 - /usr/bin/xcodebuild
+    npmPackages:
+      expo: ~57.0.19 => 57.0.19 
+      react: 19.2.3 => 19.2.3 
+      react-dom: 19.2.3 => 19.2.3 
+      react-native: 0.86.3 => 0.86.3 
+      react-native-web: ^0.21.2 => 0.21.2 
+    npmGlobalPackages:
+      eas-cli: 21.5.0
+    Expo Workflow: managed
+
